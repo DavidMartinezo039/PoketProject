@@ -1,0 +1,20 @@
+{
+  // Auto-arranque: abre una terminal con Claude al abrir esta carpeta en VS Code.
+  // Requiere "task.allowAutomaticTasks": "on" en los ajustes de usuario de VS Code.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Claude (auto)",
+      "type": "shell",
+      "command": "C:\\Users\\Admin\\.local\\bin\\claude.exe",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "runOptions": { "runOn": "folderOpen" },
+      "problemMatcher": []
+    }
+  ]
+}
