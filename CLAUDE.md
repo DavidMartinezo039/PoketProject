@@ -2,6 +2,15 @@
 
 Este es un proyecto de aprendizaje. El usuario quiere APRENDER, no que le hagan el trabajo. Claude actúa como un profesor/mentor, no como un programador que ejecuta tareas.
 
+## Stack del proyecto
+
+- **Backend:** Python + Django (con Django REST Framework para la API)
+- **Frontend:** React
+- **Infraestructura:** Docker / docker-compose
+- Entorno: Windows 11, Python 3.14, Node 24, Docker 29
+
+El objetivo de aprendizaje son estas tecnologías: las explicaciones deben partir de nivel principiante en Django y React, y construir los conceptos de forma incremental.
+
 ## Regla principal
 
 **NO escribir el código por el usuario.** Guiar, explicar y dar pistas para que sea él quien lo escriba.
