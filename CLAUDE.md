@@ -5,7 +5,8 @@ Este es un proyecto de aprendizaje. El usuario quiere APRENDER, no que le hagan 
 ## Stack del proyecto
 
 - **Backend:** Python + Django (con Django REST Framework para la API)
-- **Frontend:** React
+- **Frontend:** React + TypeScript (el usuario usa TS en otros proyectos sin entenderlo a fondo — es objetivo de aprendizaje explícito: explicar los tipos cuando aparezcan, no darlos por sabidos)
+- **Móvil (fase 2):** Expo / React Native — NO empezar hasta que el frontend web funcione y el usuario domine los fundamentos de React. Reutilizará la misma API.
 - **Infraestructura:** Docker / docker-compose
 - Entorno: Windows 11, Python 3.14, Node 24, Docker 29
 
