@@ -13,10 +13,15 @@ services:
       - "8013:8013"         # el -p del docker run, en formato YAML
     depends_on:
       - db                  # arranca db antes que backend
+    volumes:
+      - ./backend:/app                # monta el código local en el contenedor para desarrollo
   frontend:
     build: ./frontend      # carpeta donde está SU Dockerfile
     ports:
       - "5173:5173"         # el -p del docker run, en formato YAML
+    volumes:
+      - ./frontend:/app                # monta el código local en el contenedor para desarrollo
+      - /app/node_modules                 # evita montar node_modules para no sobreescribirlo
 
 volumes:
   db_data:                   # definición del volumen para la base de datos
