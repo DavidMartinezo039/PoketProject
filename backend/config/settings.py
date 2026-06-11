@@ -78,8 +78,8 @@ DATABASES = {
         'NAME': 'crm_personal',
         'USER': 'crm',
         'PASSWORD': 'devpassword',
-        'HOST': '127.0.0.1',
-        'PORT': '5433',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 

@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16     # imagen oficial, sin Dockerfile propio
+    environment:           # variables de entorno para configurar Postgres
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: crm_personal
+    volumes:
+      - db_data:/var/lib/postgresql/data  # volumen para persistencia de datos
+  backend:
+    build: ./backend        # carpeta donde está SU Dockerfile 
+    ports:
+      - "8013:8013"         # el -p del docker run, en formato YAML
+    depends_on:
+      - db                  # arranca db antes que backend
+  frontend:
+    build: ./frontend      # carpeta donde está SU Dockerfile
+    ports:
+      - "5173:5173"         # el -p del docker run, en formato YAML
+
+volumes:
+  db_data:                   # definición del volumen para la base de datos
