@@ -1,0 +1,433 @@
+/* ============================================================
+   LoginPage — diseño portado del sandbox (tema claro)
+   Las variables y los resets van DENTRO de .login-page para no
+   afectar al resto de la app.
+   ============================================================ */
+
+.login-page {
+  /* tokens de diseño */
+  --radius: 22px;
+  --speed: 0.35s;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Sora", var(--font);
+
+  /* paleta */
+  --bg-a: #eef2f9;
+  --bg-b: #e3e9f5;
+  --bg-c: #dbe7ff;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-border: rgba(20, 30, 60, 0.08);
+  --card-blur: 4px;
+  --text: #16203a;
+  --muted: #6b7589;
+  --accent: #4361ee;
+  --accent-rgb: 67, 97, 238;
+  --input-bg: #f4f7fd;
+  --btn-bg: linear-gradient(135deg, #4361ee, #7048e8);
+  --btn-text: #ffffff;
+  --particle: 67, 97, 238;
+
+  min-height: 100vh;
+  font-family: var(--font);
+  color: var(--text);
+  display: grid;
+  overflow-x: hidden;
+  background: linear-gradient(-45deg, var(--bg-a), var(--bg-b), var(--bg-c), var(--bg-a));
+  background-size: 400% 400%;
+  animation: gradientShift 18s ease infinite;
+}
+
+/* reset de márgenes acotado al login */
+.login-page :is(h1, p) {
+  margin: 0;
+}
+
+.login-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------- Tarjeta ---------- */
+.stage {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+  perspective: 1200px; /* habilita el 3D del tilt */
+}
+
+.card {
+  position: relative;
+  width: min(420px, 92vw);
+  padding: 38px 34px 30px;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(var(--card-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--card-blur)) saturate(140%);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform-style: preserve-3d;
+  transition: transform 0.12s var(--ease), box-shadow var(--speed) var(--ease);
+  animation: cardIn 0.7s var(--ease) both;
+  overflow: hidden;
+}
+
+/* brillo radial que sigue al cursor (--mx/--my las mueve el JS) */
+.card__spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--speed) var(--ease);
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(var(--accent-rgb), 0.18),
+    transparent 60%
+  );
+}
+.card:hover .card__spotlight {
+  opacity: 1;
+}
+
+.card__head {
+  text-align: center;
+  margin-bottom: 26px;
+  transform: translateZ(40px); /* flota en el 3D */
+}
+.card__logo {
+  font-size: 38px;
+  filter: drop-shadow(0 6px 14px rgba(var(--accent-rgb), 0.5));
+  animation: float 4s ease-in-out infinite;
+}
+.card__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 8px;
+  letter-spacing: -0.02em;
+}
+.card__subtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ---------- Campos ---------- */
+.field {
+  position: relative;
+  margin-bottom: 22px;
+  transform: translateZ(24px);
+}
+.field__input {
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 18px 46px 18px 16px;
+  outline: none;
+  transition: border-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease), background var(--speed) var(--ease);
+}
+.field__input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.18);
+}
+
+/* floating label: sube con foco o con contenido (placeholder=" ") */
+.field__label {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  font-size: 15px;
+  color: var(--muted);
+  pointer-events: none;
+  transform-origin: left center;
+  transition: transform var(--speed) var(--ease), color var(--speed) var(--ease);
+  padding: 0 4px;
+}
+.field__input:focus + .field__label,
+.field__input:not(:placeholder-shown) + .field__label {
+  transform: translateY(-37px) scale(0.82);
+  color: var(--accent);
+}
+
+.field__toggle {
+  position: absolute;
+  right: 8px;
+  top: 28px; /* centrado sobre el input (no sobre todo el campo) */
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 17px;
+  padding: 8px;
+  border-radius: 10px;
+  opacity: 0.7;
+  transition: opacity 0.2s, background 0.2s;
+}
+.field__toggle:hover {
+  opacity: 1;
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
+/* medidor de fuerza: 4 barras que rellena el atributo data-level */
+.strength {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-left: 2px;
+}
+.strength span {
+  height: 4px;
+  flex: 1;
+  border-radius: 4px;
+  background: var(--card-border);
+  transition: background var(--speed) var(--ease);
+}
+.strength[data-level="1"] span:nth-child(1) { background: #ff4d4d; }
+.strength[data-level="2"] span:nth-child(-n + 2) { background: #ffa534; }
+.strength[data-level="3"] span:nth-child(-n + 3) { background: #ffe14d; }
+.strength[data-level="4"] span { background: #34d399; }
+
+/* fila recuérdame / olvidé */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -4px 0 22px;
+  font-size: 13.5px;
+  transform: translateZ(20px);
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  color: var(--muted);
+  user-select: none;
+}
+.check input {
+  display: none;
+}
+.check__box {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1.5px solid var(--card-border);
+  display: grid;
+  place-items: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+.check__box::after {
+  content: "✓";
+  font-size: 12px;
+  color: var(--btn-text);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.2s, transform 0.2s var(--ease);
+}
+.check input:checked + .check__box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check input:checked + .check__box::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  position: relative;
+}
+.link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 1.5px;
+  background: var(--accent);
+  transition: width 0.25s var(--ease);
+}
+.link:hover::after {
+  width: 100%;
+}
+
+/* ---------- Mensaje de error ---------- */
+.error {
+  color: #d83a3a;
+  background: rgba(216, 58, 58, 0.08);
+  border: 1px solid rgba(216, 58, 58, 0.25);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  text-align: center;
+  margin-bottom: 18px;
+  transform: translateZ(20px);
+  animation: shake 0.4s var(--ease);
+}
+
+/* ---------- Botón ---------- */
+.btn {
+  position: relative;
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15.5px;
+  color: var(--btn-text);
+  background: var(--btn-bg);
+  padding: 16px;
+  border-radius: 14px;
+  overflow: hidden;
+  transform: translateZ(30px);
+  box-shadow: 0 14px 30px -12px rgba(var(--accent-rgb), 0.8);
+  transition: transform 0.15s var(--ease), box-shadow var(--speed) var(--ease),
+    filter 0.2s;
+}
+.btn:hover {
+  transform: translateZ(30px) translateY(-2px);
+  filter: brightness(1.08);
+}
+.btn:active {
+  transform: translateZ(30px) translateY(0);
+}
+.btn:disabled {
+  cursor: default;
+  filter: saturate(0.7) brightness(0.95);
+}
+.btn__spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--btn-text);
+  border-radius: 50%;
+  opacity: 0;
+  animation: spin 0.7s linear infinite;
+}
+.btn.is-loading .btn__text {
+  opacity: 0;
+}
+.btn.is-loading .btn__spinner {
+  opacity: 1;
+}
+
+/* onda (ripple) creada por el JS al hacer clic */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  transform: scale(0);
+  animation: ripple 0.6s var(--ease);
+  pointer-events: none;
+}
+
+/* ---------- Divider + socials ---------- */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 18px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--card-border);
+}
+
+.socials {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.social {
+  width: 52px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), border-color 0.2s, background 0.2s;
+}
+.social:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
+.card__foot {
+  text-align: center;
+  margin-top: 22px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+/* borde rojo en los campos cuando hay error */
+.field.has-error .field__input {
+  border-color: #ff5b5b;
+  box-shadow: 0 0 0 4px rgba(255, 91, 91, 0.18);
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes ripple {
+  to { transform: scale(2.6); opacity: 0; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(4px); }
+}
+
+/* respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .login-page * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  .card { padding: 30px 22px 24px; }
+  .card__title { font-size: 22px; }
+}
