@@ -178,25 +178,6 @@
   background: rgba(var(--accent-rgb), 0.12);
 }
 
-/* medidor de fuerza: 4 barras que rellena el atributo data-level */
-.strength {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  padding-left: 2px;
-}
-.strength span {
-  height: 4px;
-  flex: 1;
-  border-radius: 4px;
-  background: var(--card-border);
-  transition: background var(--speed) var(--ease);
-}
-.strength[data-level="1"] span:nth-child(1) { background: #ff4d4d; }
-.strength[data-level="2"] span:nth-child(-n + 2) { background: #ffa534; }
-.strength[data-level="3"] span:nth-child(-n + 3) { background: #ffe14d; }
-.strength[data-level="4"] span { background: #34d399; }
-
 /* fila recuérdame / olvidé */
 .row {
   display: flex;

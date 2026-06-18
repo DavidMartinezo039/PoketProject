@@ -1,21 +1,8 @@
-import { useEffect, useRef, useState, type MouseEvent, type SubmitEvent } from 'react'
+import { useState, type MouseEvent, type SubmitEvent } from 'react'
+import { useNavigate } from 'react-router'
+import { useParticles } from '../hooks/useParticles'
+import { login } from '../api/auth'
 import './LoginPage.css'
-
-// Heurística simple de fuerza de contraseña: devuelve un nivel 0..4.
-// (En un login real esto pinta poco; tiene más sentido en el registro,
-//  pero lo dejo porque venía del sandbox y queda chulo.)
-function scorePassword(value: string): number {
-  let score = 0
-  if (value.length >= 8) score++
-  if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++
-  if (/\d/.test(value)) score++
-  if (/[^A-Za-z0-9]/.test(value)) score++
-  return score
-}
-
-// "type" describe la forma de cada partícula del fondo. Es solo de TypeScript:
-// no genera código, sirve para que el editor te avise si te equivocas.
-type Particle = { x: number; y: number; vx: number; vy: number; r: number }
 
 function LoginPage() {
   const [user, setUser] = useState('')
@@ -25,89 +12,12 @@ function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // useRef nos da una "caja" para guardar el <canvas> del DOM y manipularlo
-  // a mano (dibujar). El <HTMLCanvasElement> es el tipo del elemento.
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  // useNavigate: función para cambiar de ruta desde el código (sin recargar)
+  const navigate = useNavigate()
 
-  // ---- Fondo de partículas (canvas) ----
-  // useEffect corre DESPUÉS de pintar. Arranca el bucle de animación al montar
-  // y la función que devuelve (cleanup) lo apaga al desmontar. Sin ese cleanup,
-  // en desarrollo (StrictMode monta/desmonta/monta) tendrías 2 bucles a la vez.
-  useEffect(() => {
-    const canvasEl = canvasRef.current
-    if (!canvasEl) return
-    const context = canvasEl.getContext('2d')
-    if (!context) return
-
-    // TypeScript "olvida" que ya no son null dentro de las funciones de abajo,
-    // así que los fijamos con tipo no-nulo en variables que sí lo mantienen.
-    const canvas: HTMLCanvasElement = canvasEl
-    const ctx: CanvasRenderingContext2D = context
-
-    let raf = 0
-    let W = 0
-    let H = 0
-    let particles: Particle[] = []
-
-    // Lee el color de la variable CSS --particle del tema actual.
-    function particleColor() {
-      return getComputedStyle(canvas).getPropertyValue('--particle').trim() || '67,97,238'
-    }
-
-    function resize() {
-      W = canvas.width = window.innerWidth
-      H = canvas.height = window.innerHeight
-      const count = Math.min(90, Math.floor((W * H) / 16000))
-      particles = Array.from({ length: count }, () => ({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
-        r: Math.random() * 1.8 + 0.6,
-      }))
-    }
-
-    function tick() {
-      const color = particleColor()
-      ctx.clearRect(0, 0, W, H)
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i]
-        p.x += p.vx
-        p.y += p.vy
-        if (p.x < 0 || p.x > W) p.vx *= -1
-        if (p.y < 0 || p.y > H) p.vy *= -1
-
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${color}, 0.6)`
-        ctx.fill()
-
-        // une con una línea las partículas cercanas
-        for (let j = i + 1; j < particles.length; j++) {
-          const q = particles[j]
-          const dist = Math.hypot(p.x - q.x, p.y - q.y)
-          if (dist < 120) {
-            ctx.beginPath()
-            ctx.moveTo(p.x, p.y)
-            ctx.lineTo(q.x, q.y)
-            ctx.strokeStyle = `rgba(${color}, ${0.14 * (1 - dist / 120)})`
-            ctx.lineWidth = 1
-            ctx.stroke()
-          }
-        }
-      }
-      raf = requestAnimationFrame(tick)
-    }
-
-    window.addEventListener('resize', resize)
-    resize()
-    tick()
-
-    return () => {
-      window.removeEventListener('resize', resize)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
+  // El custom hook se encarga de toda la animación del fondo y nos devuelve el
+  // ref que enganchamos al <canvas> de abajo. La página queda limpia de ese ruido.
+  const canvasRef = useParticles()
 
   // ---- Tilt 3D + spotlight siguiendo el cursor ----
   // e.currentTarget ES el <form> sobre el que está el ratón. Lo inclinamos
@@ -141,32 +51,24 @@ function LoginPage() {
     ripple.addEventListener('animationend', () => ripple.remove())
   }
 
-  // ---- Envío real al backend de Django (esto ya lo tenías tú) ----
+  // ---- Envío al backend ----
+  // Toda la fontanería del fetch vive ahora en api/auth.ts. Aquí solo pedimos
+  // el login y reaccionamos: si va bien guardamos el token y navegamos; si la
+  // función lanza un Error, mostramos su .message.
   async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8013/api/auth/login/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: user, password: password }),
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        setError(data.non_field_errors?.[0] ?? 'Error al iniciar sesión')
-        return
-      }
-      localStorage.setItem('token', data.token)
-    } catch {
-      setError('No se pudo conectar con el servidor')
+      const token = await login(user, password)
+      localStorage.setItem('token', token)
+      navigate('/inicio') // credenciales OK → a la página de inicio del menú
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error inesperado')
     } finally {
       setLoading(false)
     }
   }
-
-  // Se recalcula en cada render a partir del estado: no necesita su propio useState.
-  const level = password ? scorePassword(password) : 0
 
   return (
     <div className="login-page">
@@ -205,7 +107,7 @@ function LoginPage() {
             <label className="field__label" htmlFor="user">Usuario</label>
           </div>
 
-          {/* Campo contraseña con mostrar/ocultar y medidor de fuerza */}
+          {/* Campo contraseña con mostrar/ocultar */}
           <div className={`field ${error ? 'has-error' : ''}`}>
             <input
               className="field__input"
@@ -228,12 +130,6 @@ function LoginPage() {
             >
               {showPassword ? '🙈' : '👁'}
             </button>
-            <div className="strength" data-level={level} aria-hidden="true">
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
           </div>
 
           <div className="row">
@@ -263,12 +159,6 @@ function LoginPage() {
           </button>
 
           <div className="divider"><span>o continúa con</span></div>
-
-          <div className="socials">
-            <button className="social" type="button" title="Google">G</button>
-            <button className="social" type="button" title="GitHub">GH</button>
-            <button className="social" type="button" title="Apple">🍎</button>
-          </div>
 
           <p className="card__foot">
             ¿No tienes cuenta? <a className="link" href="#">Regístrate</a>

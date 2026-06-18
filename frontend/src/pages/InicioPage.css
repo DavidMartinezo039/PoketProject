@@ -1,0 +1,10 @@
+/* InicioPage — se pinta dentro del .content__body del layout, que ya trae el
+   padding y las variables de color (--surface, --border...) heredadas. */
+.placeholder {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  padding: 48px;
+  color: var(--muted);
+  text-align: center;
+}
